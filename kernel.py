@@ -41,11 +41,20 @@ class Kernel:
     # new_process is this process's PID.
     # DO NOT rename or delete this method. DO NOT change its arguments.
     def new_process_arrived(self, new_process: PID) -> PID:
+        # add new process to the ready to process queue
+        self.ready_queue.append(PCB(new_process))
+
+        # if cpu idle, switch to new process
+        if self.running == self.idle_pcb:
+            self.choose_next_process()
+        
         return self.running.pid
 
     # This method is triggered every time the current process performs an exit syscall.
     # DO NOT rename or delete this method. DO NOT change its arguments.
     def syscall_exit(self) -> PID:
+        self.running = self.idle_pcb
+        self.choose_next_process()
         return self.running.pid
     
 
@@ -55,10 +64,14 @@ class Kernel:
     # It is not required to actually use this method but it is recommended.
     def choose_next_process(self):
         if len(self.ready_queue) == 0:
-                return self.idle_pcb
+                self.running = self.idle_pcb
+                return
         
         if self.scheduling_algorithm == "FCFS":
-            self.running = self.idle_pcb
+            # schedule the next process in the ready queue
+            next_pcb = self.ready_queue.popleft()
+            self.running = next_pcb
+            return
         else:
             print("Unknown scheduling algorithm")
         

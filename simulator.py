@@ -135,6 +135,8 @@ class Simulator:
             delimiter = '#'
         else:
             delimiter = ':'
+        # added this for easier debugging
+        print(f"{self.elapsed_time / 1000:.3f}s {delimiter} {str}")
         self.simlog.write(f"{self.elapsed_time / 1000:.3f}s {delimiter} {str}\n")
         self.needs_spacing = True
     
