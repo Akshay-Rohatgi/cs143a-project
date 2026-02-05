@@ -40,7 +40,7 @@ class Kernel:
     # This method is triggered every time a new process has arrived.
     # new_process is this process's PID.
     # DO NOT rename or delete this method. DO NOT change its arguments.
-    def new_process_arrived(self, new_process: PID) -> PID:
+    def new_process_arrived(self, new_process: PID, priority: int, process_type: str) -> PID:
         # add new process to the ready to process queue
         self.ready_queue.append(PCB(new_process))
 
@@ -75,4 +75,10 @@ class Kernel:
         else:
             print("Unknown scheduling algorithm")
         
+    def timer_interrupt(self) -> PID:
+        return self.running.pid
 
+    def syscall_set_priority(self, new_priority: int) -> PID:
+        self.running.priority = new_priority
+        self.choose_next_process()
+        return self.running.pid
