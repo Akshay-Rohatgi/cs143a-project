@@ -11,6 +11,7 @@ PID = int
 # It is only here for your convinience and can be modified however you see fit.
 class PCB:
     pid: PID
+    priority: int
 
     def __init__(self, pid: PID):
         self.pid = pid
