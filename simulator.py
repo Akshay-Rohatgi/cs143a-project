@@ -51,7 +51,7 @@ class Simulator:
     kernel: Kernel
     next_pid: PID
     simlog: TextIOWrapper
-    needs_spacing: False
+    needs_spacing: bool
     process_0_runtime: MICRO_S
     student_logs: "StudentLogger"
 
@@ -191,7 +191,7 @@ class Simulator:
             self.needs_spacing = False
 
 class StudentLogger:
-    __simluator: Simulator
+    __simluator: Simulator | None
 
     def __init__(self, simulator: Simulator | None):
         self.__simluator = simulator
@@ -233,5 +233,5 @@ if __name__ == "__main__":
 
     sim_description = Path(sys.argv[1])
     log_path = Path(sys.argv[2])
-    simulator = Simulator(sim_description, log_path, student_logs)
+    simulator = Simulator(sim_description, str(log_path), student_logs)
     simulator.run_simulator()
