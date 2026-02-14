@@ -41,6 +41,8 @@ class Kernel:
         self.priority_queue = []
         self.idle_pcb = PCB(0)
         self.running = self.idle_pcb
+        self.time_quantum = 40
+        self.ticks = 0
 
     # This method is triggered every time a new process has arrived.
     # new_process is this process's PID.
@@ -61,6 +63,13 @@ class Kernel:
                 self.choose_next_process()
         
         if self.scheduling_algorithm == "FCFS":
+            # add new process to the ready to process queue
+            self.ready_queue.append(new_pcb)
+            # if cpu idle, switch to new process
+            if self.running == self.idle_pcb:
+                self.choose_next_process()
+
+        if self.scheduling_algorithm == "RR":
             # add new process to the ready to process queue
             self.ready_queue.append(new_pcb)
             # if cpu idle, switch to new process
@@ -93,7 +102,7 @@ class Kernel:
             next_pcb = self.ready_queue.popleft()
             self.running = next_pcb
             return
-        if self.scheduling_algorithm == "Priority":
+        elif self.scheduling_algorithm == "Priority":
             if(len(self.priority_queue) == 0):
                 self.running = self.idle_pcb
                 return
@@ -102,10 +111,30 @@ class Kernel:
             self.running = next_pcb
 
             return
+        elif self.scheduling_algorithm == "RR":
+            if self.running != self.idle_pcb:
+                # add the currently running process back to the ready queue
+                self.ready_queue.append(self.running)
+
+            if(len(self.ready_queue) == 0):
+                self.running = self.idle_pcb
+                return
+            
+            # schedule the next process in the ready queue
+            next_pcb = self.ready_queue.popleft()
+            self.running = next_pcb
+            self.ticks = 0
+
+            return
         else:
             print("Unknown scheduling algorithm")
         
     def timer_interrupt(self) -> PID:
+        if self.scheduling_algorithm == "RR":
+            self.ticks += 1
+            if self.ticks >= self.time_quantum / 10:
+                self.ticks = 0
+                self.choose_next_process()
         return self.running.pid
 
     def syscall_set_priority(self, new_priority: int) -> PID:
