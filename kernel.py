@@ -43,12 +43,10 @@ class Semaphore:
     
 class Mutex:
     locked: bool
-    owner: None
     blocked_list: list[PCB]
     
     def __init__(self):
         self.locked = False
-        self.owner = None
         self.blocked_list = list()
 
 RR_QUANTUM_TICKS: int = 4
@@ -173,6 +171,7 @@ class Kernel:
             queue.append(self.running)
             self.running = queue.popleft()
 
+
     def fcfs_chose_next_process(self, queue: deque[PCB]):
         if len(queue) == 0:
             return
@@ -265,12 +264,15 @@ class Kernel:
     def syscall_mutex_lock(self, mutex_id: int) -> PID:
         mutex = self.mutexes[mutex_id]
         if mutex.locked == False:
+            print("mutex locked is false")
             mutex.locked = True
-            mutex.owner = self.running
         else:
+            print("mutex locked is true")
             mutex.blocked_list.append(self.running)
+            self.running.num_quantum_ticks = 0
             self.running = self.idle_pcb
             self.choose_next_process()
+        print(f"SELF RUNNING PID AFTER MUTEX LOCK {self.running.pid}")
         return self.running.pid 
 
     # This method is triggered when the currently running process calls unlock() on an existing mutex.
@@ -279,9 +281,17 @@ class Kernel:
         mutex = self.mutexes[mutex_id]
         if len(mutex.blocked_list) > 0:
             if self.scheduling_algorithm == RR:
-                return
+                next_process = pop_min_pid(mutex.blocked_list)
+                mutex.locked = True
+                self.ready_queue.append(next_process)
+                self.choose_next_process() # context switch
             elif self.scheduling_algorithm == PRIORITY:
-                return
+                next_process = pop_min_priority(mutex.blocked_list)
+                self.ready_queue.append(next_process)
+                mutex.locked = True
+                self.choose_next_process() # context switch
+        else:
+            mutex.locked = False
         return self.running.pid 
 
 
